@@ -1,0 +1,69 @@
+<nav class="navbar navbar-expand-lg navbar-dark p-2 bg-black">
+  <div class="container">
+    <a class="navbar-brand" href="/">{{__ 'app_title'}}</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/about">{{__ 'about'}}</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <!-- Selector de idioma -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            {{#if (eq __ 'lang' 'es')}}
+              Español
+            {{else}}
+              English
+            {{/if}}
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="/lang/en" onclick="changeLanguage('es')">
+                Español
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="/lang/es" onclick="changeLanguage('en')">
+                English
+              </a>
+            </li>
+          </ul>
+        </li>
+        {{#if user}}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              {{__ 'notes'}}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="/notes">{{__ 'notes'}}</a></li>
+              <li><a class="dropdown-item" href="/notes/add">{{__ 'new_note'}}</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><a class="dropdown-item" href="/auth/logout">{{__ 'logout'}}</a></li>
+            </ul>
+          </li>
+        {{else}}
+          <li class="nav-item">
+            <a class="nav-link" href="/auth/signin">{{__ 'login'}}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/auth/signup">{{__ 'register'}}</a>
+          </li>
+        {{/if}}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Script para cambiar el idioma -->
+<script>
+  function changeLanguage(lang) {
+    // Guardar el idioma seleccionado en una cookie
+    document.cookie = `lang=${lang}; path=/; max-age=31536000`; // 1 año de duración
+    // Recargar la página para aplicar el nuevo idioma
+    window.location.reload();
+  }
+</script>

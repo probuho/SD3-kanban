@@ -1,0 +1,40 @@
+<div class="kanban-board">
+  <div class="column todo">
+    <h3>To Do</h3>
+    <div class="tasks-container" data-status="todo">
+      {{#each columns.todo}}
+        <div class="task-card" draggable="true" data-task-id="{{_id}}">
+          <h4>{{title}}</h4>
+          <p>{{description}}</p>
+          <span class="priority priority-{{priority}}">{{priority}}</span>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="column in-progress">
+    <h3>In Progress</h3>
+    <div class="tasks-container" data-status="in-progress">
+      {{#each columns.inProgress}}
+        <div class="task-card" draggable="true" data-task-id="{{_id}}">
+          <h4>{{title}}</h4>
+          <p>{{description}}</p>
+          <span class="priority priority-{{priority}}">{{priority}}</span>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="column done">
+    <h3>Done</h3>
+    <div class="tasks-container" data-status="done">
+      {{#each columns.done}}
+        <div class="task-card" draggable="true" data-task-id="{{_id}}">
+          <h4>{{title}}</h4>
+          <p>{{description}}</p>
+          <span class="priority priority-{{priority}}">{{priority}}</span>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</div>

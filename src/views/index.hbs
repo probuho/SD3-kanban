@@ -1,0 +1,115 @@
+<html lang="{{__ 'lang'}}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{__ "app_title"}}</title>
+    <!-- Bootstrap 5 + Tema Lux -->
+    <link
+      rel="stylesheet"
+      href="https://bootswatch.com/5/lux/bootstrap.min.css"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body class="d-flex flex-column min-vh-100">
+
+    <main class="container my-5 flex-grow-1">
+      {{#if user}}
+        <!-- Dashboard para usuarios autenticados -->
+        <div class="dashboard">
+          <h1 class="display-4">{{__ "dashboard_title"}}</h1>
+          <p class="lead mt-4">{{__ "dashboard_message"}}</p>
+          <hr class="my-4" />
+          <div class="notes">
+            <h2>{{__ "your_notes"}}</h2>
+            {{#each notes}}
+              <div class="note">
+                <h3>{{this.title}}</h3>
+                <p>{{this.description}}</p>
+                <a href="/notes/edit/{{this._id}}" class="btn btn-warning">{{__
+                    "edit_note"
+                  }}</a>
+                <form
+                  action="/notes/delete/{{this._id}}"
+                  method="POST"
+                  class="d-inline"
+                >
+                  <button type="submit" class="btn btn-danger">{{__
+                      "delete_note"
+                    }}</button>
+                </form>
+              </div>
+            {{else}}
+              <p>{{__ "no_notes"}}</p>
+            {{/each}}
+            <a href="/notes/add" class="btn btn-primary mt-4">{{__
+                "add_note"
+              }}</a>
+          </div>
+        </div>
+      {{else}}
+        <!-- Jumbotron principal para usuarios no autenticados -->
+        <div class="jumbotron bg-light p-5 rounded-3 text-center">
+          <h1 class="display-4">{{__ "welcome"}}</h1>
+          <p class="lead mt-4">{{__ "welcome_message"}}</p>
+          <hr class="my-4" />
+          <p class="text-muted">{{__ "welcome_description"}}</p>
+          <div class="d-grid gap-3 d-md-flex justify-content-md-center mt-4">
+            <a href="/register" class="btn btn-primary btn-lg">{{__
+                "get_started"
+              }}</a>
+          </div>
+        </div>
+      {{/if}}
+
+      <!-- Características -->
+      <div class="row row-cols-1 row-cols-md-3 g-4 mt-5">
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <i class="fas fa-magic fa-3x text-primary mb-3"></i>
+              <h3 class="card-title">{{__ "feature1_title"}}</h3>
+              <p class="card-text">{{__ "feature1_description"}}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <i class="fas fa-mobile-alt fa-3x text-info mb-3"></i>
+              <h3 class="card-title">{{__ "feature2_title"}}</h3>
+              <p class="card-text">{{__ "feature2_description"}}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+              <h3 class="card-title">{{__ "feature3_title"}}</h3>
+              <p class="card-text">{{__ "feature3_description"}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white mt-5 py-3">
+      <div class="container text-center">
+        <p class="mb-0">{{__ "footer_text"}}
+          <i class="fas fa-heart text-danger"></i></p>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+    ></script>
+  </body>
+</html>

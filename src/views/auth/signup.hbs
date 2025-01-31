@@ -1,0 +1,31 @@
+<div class="row">
+  <div class="col-md-4 mx-auto">
+    <div class="card bg-black text-white">
+      <div class="card-header pt-5">
+        <h4 class="text-center">{{__ 'register'}}</h4>
+      </div>
+      <div class="card-body">
+        <form action="/auth/signup" method="POST">
+          <div class="mb-3">
+            <label for="name">{{__ 'name'}}:</label>
+            <input type="text" class="form-control bg-dark text-white" name="name" placeholder="{{__ 'name'}}" value="{{name}}">
+          </div>
+          <div class="mb-3">
+            <label for="email">{{__ 'email'}}:</label>
+            <input type="email" class="form-control bg-dark text-white" name="email" placeholder="{{__ 'email'}}" value="{{email}}">
+          </div>
+          <div class="mb-3">
+            <label for="password">{{__ 'password'}}:</label>
+            <input type="password" class="form-control bg-dark text-white" name="password" placeholder="{{__ 'password'}}" value="{{password}}">
+          </div>
+          <div class="mb-3">
+            <label for="confirm_password">{{__ 'confirm_password'}}:</label>
+            <input type="password" class="form-control bg-dark text-white" name="confirm_password" placeholder="{{__ 'confirm_password'}}" value="{{confirm_password}}">
+          </div>
+          <button class="btn btn-success btn-block">{{__ 'register'}}</button>
+        </form>
+      </div>
+      <p class="text-center">{{__ 'already_have_account'}} <a href="/auth/signin" class="text-info">{{__ 'login'}}</a></p>
+    </div>
+  </div>
+</div>

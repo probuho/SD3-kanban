@@ -1,0 +1,33 @@
+<form action="/notes/edit-note/{{note._id}}?_method=PUT" method="POST">
+  <div class="mb-3">
+    <label for="title" class="form-label">{{__ 'title'}}</label>
+    <input type="text" name="title" class="form-control" id="title" value="{{note.title}}" required>
+  </div>
+  <div class="mb-3">
+    <label for="description" class="form-label">{{__ 'description'}}</label>
+    <textarea name="description" class="form-control" id="description" rows="3" required>{{note.description}}</textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">{{__ 'save'}}</button>
+</form>
+
+{{!-- <div class="col-md-4 mx-auto">
+  <div class="card">
+    <div class="card-header text-center">
+      <h3>{{__ 'edit'}}</h3>
+    </div>
+    <div class="card-body">
+      <form action="/notes/edit-note/{{note._id}}?_method=PUT" method="POST">
+        <input type="hidden" name="_method" value="PUT">
+        <div class="mb-3">
+          <label for="title">{{__ 'title'}}:</label>
+          <input type="text" name="title" class="form-control" value="{{note.title}}">
+        </div>
+        <div class="mb-3">
+          <label for="description">{{__ 'description'}}:</label>
+          <textarea name="description" class="form-control">{{note.description}}</textarea>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">{{__ 'save'}}</button>
+      </form>
+    </div>
+  </div>
+</div> --}}
