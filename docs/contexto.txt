@@ -7400,3 +7400,726 @@ creo que este index esta tienendo problemas , porque creo que este mismo codigo 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
+
+
+bitacora 01-02-2025  -------------------------------------
+
+Este proyecto es una aplicación web para gestionar notas personales, utilizando tecnologías como Node.js, Express, MongoDB y Handlebars. Aquí hay un resumen de sus características y funcionalidades:
+
+CRUD de Notas: Permite a los usuarios crear, leer, actualizar y eliminar notas.
+Autenticación de Usuarios: Los usuarios pueden registrarse, iniciar sesión y cerrar sesión.
+Gestión de Sesiones: Utiliza sesiones para mantener a los usuarios autenticados.
+Motor de Plantillas: Utiliza Handlebars para renderizar las vistas en el lado del servidor.
+Persistencia de Datos: Utiliza MongoDB para almacenar usuarios y notas.
+Manejo de Errores y Mensajes Flash: Muestra mensajes de éxito y error a los usuarios.
+La estructura del proyecto incluye:
+
+src/config: Configuración de la aplicación, incluyendo la configuración de la base de datos y la internacionalización.
+src/controllers: Controladores para manejar la lógica de autenticación, el tablero Kanban y las tareas.
+src/models: Modelos de Mongoose para las notas y las tareas.
+src/routes: Rutas para la autenticación, el tablero y las tareas.
+src/views: Vistas de Handlebars para renderizar las páginas.
+public: Archivos estáticos como CSS y JavaScript.
+app.js: Archivo principal de la aplicación.
+package.json: Archivo de configuración de npm.
+.env: Archivo de variables de entorno.
+El proyecto está configurado para conectarse a una base de datos MongoDB llamada notes-app y utiliza las colecciones notes y users.
+
+
+
+
+muy bien dejame corregirte en algunas cosas y al parecer no puedes ver el contenido de los archivo aunque estas dentro integrado
+dentro de vscode o bueno eso parece que quieres que crea pero te pongo en contexto actualmente la ruta
+
+src/routes/auth.js no existe y la ruta que se esta utilizando es src/routes/auth.routes.js
+
+tu me pides integrar esto pero el archivo contiene esto:
+
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+
+// ...rutas existentes...
+
+// Ruta para solicitar restablecimiento de clave
+router.get('/forgot-password', authController.getForgotPassword);
+router.post('/forgot-password', authController.postForgotPassword);
+
+// Ruta para restablecer la clave
+router.get('/reset-password/:token', authController.getResetPassword);
+router.post('/reset-password/:token', authController.postResetPassword);
+
+module.exports = router;
+
+y el archivo src/controllers/authController.js contiene esto:
+
+import User from "../models/User.js";
+import passport from "passport";
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+
+export const renderSignUpForm = (req, res) => res.render("auth/signup");
+
+export const signup = async (req, res) => {
+  let errors = [];
+  const { name, email, password, confirm_password } = req.body;
+  if (password !== confirm_password) {
+    errors.push({ text: "Passwords do not match." });
+  }
+
+  if (password.length < 4) {
+    errors.push({ text: "Passwords must be at least 4 characters." });
+  }
+
+  if (errors.length > 0) {
+    return res.render("auth/signup", {
+      errors,
+      name,
+      email,
+      password,
+      confirm_password,
+    });
+  }
+
+  // Look for email coincidence
+  const userFound = await User.findOne({ email: email });
+  if (userFound) {
+    req.flash("error_msg", "The Email is already in use.");
+    return res.redirect("/auth/signup");
+  }
+
+  // Saving a New User
+  const newUser = new User({ name, email, password });
+  newUser.password = await newUser.encryptPassword(password);
+  await newUser.save();
+  req.flash("success_msg", "You are registered.");
+  res.redirect("/auth/signin");
+};
+
+export const renderSigninForm = (req, res) => res.render("auth/signin");
+
+export const signin = passport.authenticate("local", {
+  successRedirect: "/notes",
+  failureRedirect: "/auth/signin",
+  failureFlash: true,
+});
+
+export const logout = async (req, res, next) => {
+  await req.logout((err) => {
+    if (err) return next(err);
+    req.flash("success_msg", "You are logged out now.");
+    res.redirect("/auth/signin");
+  });
+
+  // Mostrar formulario de solicitud de restablecimiento de clave
+  exports.getForgotPassword = (req, res) => {
+    res.render("forgot-password");
+  };
+
+  // Procesar solicitud de restablecimiento de clave
+  exports.postForgotPassword = async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      req.flash(
+        "error_msg",
+        "No se encontró una cuenta con ese correo electrónico."
+      );
+      return res.redirect("/forgot-password");
+    }
+
+    const token = crypto.randomBytes(20).toString("hex");
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      to: user.email,
+      from: process.env.EMAIL_USER,
+      subject: "Restablecimiento de Clave",
+      text: `Recibiste este correo porque tú (o alguien más) solicitó restablecer la clave de tu cuenta.\n\n
+           Haz clic en el siguiente enlace, o pégalo en tu navegador para completar el proceso:\n\n
+           http://${req.headers.host}/reset-password/${token}\n\n
+           Si no solicitaste esto, ignora este correo y tu clave permanecerá sin cambios.\n`,
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error("Error al enviar el correo:", err);
+        req.flash(
+          "error_msg",
+          "Hubo un problema al enviar el correo de restablecimiento."
+        );
+        return res.redirect("/forgot-password");
+      }
+      req.flash(
+        "success_msg",
+        "Se envió un correo con las instrucciones para restablecer tu clave."
+      );
+      res.redirect("/login");
+    });
+  };
+
+  // Mostrar formulario de restablecimiento de clave
+  exports.getResetPassword = async (req, res) => {
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      req.flash(
+        "error_msg",
+        "El token de restablecimiento es inválido o ha expirado."
+      );
+      return res.redirect("/forgot-password");
+    }
+
+    res.render("reset-password", { token: req.params.token });
+  };
+
+  // Procesar restablecimiento de clave
+  exports.postResetPassword = async (req, res) => {
+    const { password, confirmPassword } = req.body;
+
+    if (password !== confirmPassword) {
+      req.flash("error_msg", "Las claves no coinciden.");
+      return res.redirect("back");
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      req.flash(
+        "error_msg",
+        "El token de restablecimiento es inválido o ha expirado."
+      );
+      return res.redirect("/forgot-password");
+    }
+
+    user.password = await user.encryptPassword(password);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    req.flash("success_msg", "Tu clave ha sido restablecida exitosamente.");
+    res.redirect("/login");
+  };
+};
+
+
+el archivo src/controllers/authController.js dices  esto:
+
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const User = require('../models/User');
+
+// ...controladores existentes...
+
+// Mostrar formulario de solicitud de restablecimiento de clave
+exports.getForgotPassword = (req, res) => {
+  res.render('forgot-password');
+};
+
+// Procesar solicitud de restablecimiento de clave
+exports.postForgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    req.flash('error_msg', 'No se encontró una cuenta con ese correo electrónico.');
+    return res.redirect('/forgot-password');
+  }
+
+  const token = crypto.randomBytes(20).toString('hex');
+  user.resetPasswordToken = token;
+  user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
+  await user.save();
+
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const mailOptions = {
+    to: user.email,
+    from: process.env.EMAIL_USER,
+    subject: 'Restablecimiento de Clave',
+    text: `Recibiste este correo porque tú (o alguien más) solicitó restablecer la clave de tu cuenta.\n\n
+           Haz clic en el siguiente enlace, o pégalo en tu navegador para completar el proceso:\n\n
+           http://${req.headers.host}/reset-password/${token}\n\n
+           Si no solicitaste esto, ignora este correo y tu clave permanecerá sin cambios.\n`,
+  };
+
+  transporter.sendMail(mailOptions, (err) => {
+    if (err) {
+      console.error('Error al enviar el correo:', err);
+      req.flash('error_msg', 'Hubo un problema al enviar el correo de restablecimiento.');
+      return res.redirect('/forgot-password');
+    }
+    req.flash('success_msg', 'Se envió un correo con las instrucciones para restablecer tu clave.');
+    res.redirect('/login');
+  });
+};
+
+// Mostrar formulario de restablecimiento de clave
+exports.getResetPassword = async (req, res) => {
+  const user = await User.findOne({
+    resetPasswordToken: req.params.token,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    req.flash('error_msg', 'El token de restablecimiento es inválido o ha expirado.');
+    return res.redirect('/forgot-password');
+  }
+
+  res.render('reset-password', { token: req.params.token });
+};
+
+// Procesar restablecimiento de clave
+exports.postResetPassword = async (req, res) => {
+  const { password, confirmPassword } = req.body;
+
+  if (password !== confirmPassword) {
+    req.flash('error_msg', 'Las claves no coinciden.');
+    return res.redirect('back');
+  }
+
+  const user = await User.findOne({
+    resetPasswordToken: req.params.token,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    req.flash('error_msg', 'El token de restablecimiento es inválido o ha expirado.');
+    return res.redirect('/forgot-password');
+  }
+
+  user.password = await user.encryptPassword(password);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+  await user.save();
+
+  req.flash('success_msg', 'Tu clave ha sido restablecida exitosamente.');
+  res.redirect('/login');
+};
+
+pero realmente contiene esto src/controllers/auth.Controller.js
+
+import User from "../models/User.js";
+import passport from "passport";
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
+
+export const renderSignUpForm = (req, res) => res.render("auth/signup");
+
+export const signup = async (req, res) => {
+  let errors = [];
+  const { name, email, password, confirm_password } = req.body;
+  if (password !== confirm_password) {
+    errors.push({ text: "Passwords do not match." });
+  }
+
+  if (password.length < 4) {
+    errors.push({ text: "Passwords must be at least 4 characters." });
+  }
+
+  if (errors.length > 0) {
+    return res.render("auth/signup", {
+      errors,
+      name,
+      email,
+      password,
+      confirm_password,
+    });
+  }
+
+  // Look for email coincidence
+  const userFound = await User.findOne({ email: email });
+  if (userFound) {
+    req.flash("error_msg", "The Email is already in use.");
+    return res.redirect("/auth/signup");
+  }
+
+  // Saving a New User
+  const newUser = new User({ name, email, password });
+  newUser.password = await newUser.encryptPassword(password);
+  await newUser.save();
+  req.flash("success_msg", "You are registered.");
+  res.redirect("/auth/signin");
+};
+
+export const renderSigninForm = (req, res) => res.render("auth/signin");
+
+export const signin = passport.authenticate("local", {
+  successRedirect: "/notes",
+  failureRedirect: "/auth/signin",
+  failureFlash: true,
+});
+
+export const logout = async (req, res, next) => {
+  await req.logout((err) => {
+    if (err) return next(err);
+    req.flash("success_msg", "You are logged out now.");
+    res.redirect("/auth/signin");
+  });
+
+  // Mostrar formulario de solicitud de restablecimiento de clave
+  exports.getForgotPassword = (req, res) => {
+    res.render("forgot-password");
+  };
+
+  // Procesar solicitud de restablecimiento de clave
+  exports.postForgotPassword = async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      req.flash(
+        "error_msg",
+        "No se encontró una cuenta con ese correo electrónico."
+      );
+      return res.redirect("/forgot-password");
+    }
+
+    const token = crypto.randomBytes(20).toString("hex");
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      to: user.email,
+      from: process.env.EMAIL_USER,
+      subject: "Restablecimiento de Clave",
+      text: `Recibiste este correo porque tú (o alguien más) solicitó restablecer la clave de tu cuenta.\n\n
+           Haz clic en el siguiente enlace, o pégalo en tu navegador para completar el proceso:\n\n
+           http://${req.headers.host}/reset-password/${token}\n\n
+           Si no solicitaste esto, ignora este correo y tu clave permanecerá sin cambios.\n`,
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error("Error al enviar el correo:", err);
+        req.flash(
+          "error_msg",
+          "Hubo un problema al enviar el correo de restablecimiento."
+        );
+        return res.redirect("/forgot-password");
+      }
+      req.flash(
+        "success_msg",
+        "Se envió un correo con las instrucciones para restablecer tu clave."
+      );
+      res.redirect("/login");
+    });
+  };
+
+  // Mostrar formulario de restablecimiento de clave
+  exports.getResetPassword = async (req, res) => {
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      req.flash(
+        "error_msg",
+        "El token de restablecimiento es inválido o ha expirado."
+      );
+      return res.redirect("/forgot-password");
+    }
+
+    res.render("reset-password", { token: req.params.token });
+  };
+
+  // Procesar restablecimiento de clave
+  exports.postResetPassword = async (req, res) => {
+    const { password, confirmPassword } = req.body;
+
+    if (password !== confirmPassword) {
+      req.flash("error_msg", "Las claves no coinciden.");
+      return res.redirect("back");
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      req.flash(
+        "error_msg",
+        "El token de restablecimiento es inválido o ha expirado."
+      );
+      return res.redirect("/forgot-password");
+    }
+
+    user.password = await user.encryptPassword(password);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    req.flash("success_msg", "Tu clave ha sido restablecida exitosamente.");
+    res.redirect("/login");
+  };
+};
+
+el modelo archivo User.js contiene esto:
+
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const UserSchema = new mongoose.Schema({
+  // ...campos existentes...
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+});
+
+// Método para encriptar la clave
+UserSchema.methods.encryptPassword = async function(password) {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+};
+
+module.exports = mongoose.model('User', UserSchema);
+
+pero ya existe un modelo usuario que contiene esto:
+
+src\models\User.js
+
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+
+const UserSchema = new mongoose.Schema(
+  {
+    name: { type: String, trim: true },
+    email: { type: String, required: true, unique: true, trim: true },
+    password: { type: String, required: true },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+  }
+  
+);
+
+// Método para encriptar la clave
+
+UserSchema.methods.encryptPassword = async (password) => {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+};
+
+UserSchema.methods.matchPassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+export default mongoose.model("User", UserSchema);
+
+ahora bien , las vistas que debo crear son estas pero quisiera que tomaras en cuenta
+llamarlas dentro de la ruta C:\Users\aruizc01\Desktop\kanbannotes\src\views\auth 
+que ya contiene signin.hbs y signup.hbs y que estas vistas se llamen forgot-password.hbs y reset-password.hbs
+
+asi que este codigo debes replantearlo para que se ajuste a la estructura actual del  proyecto
+y cuando se haga el llamado a restablecer clave y todo eso pues justo seria poder invocarlas desde esa ruta de vistas
+
+Archivo: src/views/forgot-password.hbs
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Restablecer Clave</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <h1>Restablecer Clave</h1>
+  <form action="/forgot-password" method="POST">
+    <div>
+      <label for="email">Correo Electrónico:</label>
+      <input type="email" name="email" id="email" required>
+    </div>
+    <button type="submit">Enviar</button>
+  </form>
+</body>
+</html>
+
+src/views/reset-password.hbs
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Restablecer Clave</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <h1>Restablecer Clave</h1>
+  <form action="/reset-password/{{token}}" method="POST">
+    <div>
+      <label for="password">Nueva Clave:</label>
+      <input type="password" name="password" id="password" required>
+    </div>
+    <div>
+      <label for="confirmPassword">Confirmar Nueva Clave:</label>
+      <input type="password" name="confirmPassword" id="confirmPassword" required>
+    </div>
+    <button type="submit">Restablecer Clave</button>
+  </form>
+</body>
+</html>
+
+adicionalmente debes considerar que el archivo app.js contiene esto:
+
+7. Actualizar el Archivo Principal de la Aplicación
+Asegurarse de que las rutas de autenticación estén incluidas en el archivo principal.
+
+Archivo: C:\Users\aruizc01\Desktop\kanbannotes\src\app.js
+
+import express from "express";
+import exphbs from "express-handlebars";
+import session from "express-session";
+import methodOverride from "method-override";
+import flash from "connect-flash";
+import passport from "passport";
+import morgan from "morgan";
+import MongoStore from "connect-mongo";
+import mongoose from "mongoose";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { MONGODB_URI, PORT } from "./config.js";
+import dotenv from "dotenv";
+import indexRoutes from "./routes/index.routes.js";
+import notesRoutes from "./routes/notes.routes.js";
+import userRoutes from "./routes/auth.routes.js";
+import boardRoutes from "./routes/board.routes.js"; // Importar board.routes.js
+import taskRoutes from "./routes/task.routes.js"; // Importar task.routes.js
+import "./config/passport.js";
+import i18n from "./config/i18n.js";
+
+// Initializations
+const app = express();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config();
+
+// settings
+app.set("port", PORT);
+app.set("views", join(__dirname, "views"));
+
+// Configuración ÚNICA de Handlebars (sin duplicados)
+const hbs = exphbs.create({
+  defaultLayout: "main",
+  layoutsDir: join(app.get("views"), "layouts"),
+  partialsDir: join(app.get("views"), "partials"),
+  extname: ".hbs",
+  helpers: {
+    eq: (a, b) => a === b, // Helper para comparaciones
+    __: function () {
+      return i18n.__.apply(this, arguments); // Helper para i18n
+    },
+  }
+});
+
+// config view engine
+app.engine(".hbs", hbs.engine);
+app.set("view engine", ".hbs");
+
+// middlewares
+app.use(morgan("dev"));
+app.use(express.urlencoded({ extended: false }));
+app.use(methodOverride("_method"));
+app.use(i18n.init); // Usar i18n como middleware
+
+// Conectar a MongoDB
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log("DB is connected"))
+  .catch((err) => console.error(err));
+
+// Configuración de sesiones
+app.use(
+  session({
+    secret: "secret",
+    resave: true,
+    saveUninitialized: true,
+    store: MongoStore.create({ mongoUrl: MONGODB_URI }),
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
+// Variables globales
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  res.locals.error = req.flash("error");
+  res.locals.user = req.user || null;
+  res.locals.__ = res.__; // i18n disponible en vistas
+  next();
+});
+
+// Rutas
+app.use(indexRoutes);
+app.use(userRoutes);
+app.use(notesRoutes);
+app.use(boardRoutes); // Usar board.routes.js
+app.use(taskRoutes); // Usar task.routes.js
+
+// Archivos estáticos
+app.use(express.static(join(__dirname, "public")));
+
+// Manejo de errores
+app.use((req, res) => res.status(404).render("404"));
+app.use((error, req, res) => {
+  res.status(error.status || 500);
+  res.render("error", { error });
+});
+
+export default app;
+
+y no entiendo como integrar esto:
+
+const express = require('express');
+const app = express();
+const authRoutes = require('./src/routes/auth');
+
+// ...configuración existente...
+
+app.use('/auth', authRoutes);
+
+// ...configuración existente...
+
+module.exports = app; porque creo que estas haciendo referencias de mala manera a los archivos 
+y no estas tomando en cuenta la estructura actual del proyecto
+
+bien ahora tambien a esta autenticacion vamos a agregar una funcionalidad adicinal. 
+cuando el usuario se registre para usar la aplicacion, debe colocar una pregunta de seguridad
+en caso de que los otros metodos de restablecimiento de contraseña no esten disponibles o en este caso como es un ambiente de desarrolo configurados

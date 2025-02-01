@@ -6,12 +6,18 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, trim: true },
     email: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+    securityQuestion: { type: String, required: true },
+    securityAnswer: { type: String, required: true },
   },
   {
     timestamps: true,
     versionKey: false,
   }
 );
+
+// Método para encriptar la clave
 
 UserSchema.methods.encryptPassword = async (password) => {
   const salt = await bcrypt.genSalt(10);
@@ -23,3 +29,5 @@ UserSchema.methods.matchPassword = async function (password) {
 };
 
 export default mongoose.model("User", UserSchema);
+
+

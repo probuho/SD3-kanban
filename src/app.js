@@ -14,8 +14,8 @@ import dotenv from "dotenv";
 import indexRoutes from "./routes/index.routes.js";
 import notesRoutes from "./routes/notes.routes.js";
 import userRoutes from "./routes/auth.routes.js";
-import boardRoutes from "./routes/board.routes.js"; // Importar board.routes.js
-import taskRoutes from "./routes/task.routes.js"; // Importar task.routes.js
+import boardRoutes from "./routes/board.routes.js";
+import taskRoutes from "./routes/task.routes.js";
 import "./config/passport.js";
 import i18n from "./config/i18n.js";
 
@@ -87,8 +87,8 @@ app.use((req, res, next) => {
 app.use(indexRoutes);
 app.use(userRoutes);
 app.use(notesRoutes);
-app.use(boardRoutes); // Usar board.routes.js
-app.use(taskRoutes); // Usar task.routes.js
+app.use(boardRoutes);
+app.use(taskRoutes);
 
 // Archivos estáticos
 app.use(express.static(join(__dirname, "public")));

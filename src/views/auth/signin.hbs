@@ -2,23 +2,28 @@
   <div class="col-md-4 mx-auto">
     <div class="card mt-5 bg-black text-white rounded">
       <div class="card-header text-center pt-5">
-        <h1 class="h4 text-white">{{__ 'login'}}</h1>
+        <h1 class="h4 text-white">{{__ 'signin_title'}}</h1>
       </div>
-      <img class="rounded-circle mx-auto d-block logo m-4" src="/img/logo.png" alt="Logo">
+      <img
+        class="rounded-circle mx-auto d-block logo m-4"
+        src="/img/logo.png"
+        alt="Logo"
+      />
       <div class="card-body">
         <form action="/auth/signin" method="POST">
           <div class="mb-3">
             <label for="email">{{__ 'email'}}:</label>
-            <input type="email" class="form-control bg-dark text-white" name="email" placeholder="{{__ 'email'}}" autofocus>
+            <input type="email" name="email" class="form-control" required>
           </div>
           <div class="mb-3">
             <label for="password">{{__ 'password'}}:</label>
-            <input type="password" class="form-control bg-dark text-white" name="password" placeholder="{{__ 'password'}}">
+            <input type="password" name="password" class="form-control" required>
           </div>
-          <button class="btn btn-success btn-block">{{__ 'login'}}</button>
+          <button type="submit" class="btn btn-primary">{{__ 'login'}}</button>
         </form>
       </div>
-      <p class="text-center">{{__ 'dont_have_account'}} <a href="/auth/signup" class="text-info">{{__ 'register'}}</a></p>
+      <p class="text-center">{{__ 'no_account'}}
+        <a href="/auth/signup" class="text-info">{{__ 'register'}}</a></p>
     </div>
   </div>
 </div>

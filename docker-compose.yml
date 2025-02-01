@@ -7,14 +7,14 @@ services:
     restart: always
     build: .
     ports:
-      - 4000:4000
+      - 5001:5001
     links:
       - mongo
     volumes:
       - .:/usr/src/app
     environment:
       - MONGODB_URI=mongodb://mongo/kanban-app
-      - PORT=4000
+      - PORT=5001
       - NODE_ENV=development
     command: /bin/sh -c 'npm install && npm run dev'
   mongo:
